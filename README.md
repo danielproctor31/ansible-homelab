@@ -1,4 +1,4 @@
-# ansible-workstation-playbook
+# ansible-desktop-playbook
 
 ## Prerequisites
 
