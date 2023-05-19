@@ -1,0 +1,10 @@
+---
+- name: Copy dconf profile
+  copy: src=files/dconf/db dest=/etc/dconf/profile/user
+
+- name: Copy dconf config
+  copy: src=files/dconf/01-user dest=/etc/dconf/db/local.d/01-user
+
+- name: dconf update
+  become_user: daniel
+  shell: dconf update

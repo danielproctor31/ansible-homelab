@@ -1,0 +1,24 @@
+--- 
+hosts: localhost
+  become: true
+    pre_tasks:
+    - name: update repositories
+      apt: update_cache=yes
+      changed_when: false
+
+  - include_vars: {{ item }}
+    with_first_found:
+      - vars/{{ ansible_os_family }}.yml
+      - vars/default.yml
+  tasks:
+    - name: Get Desktop
+      shell:
+        cmd: "echo $XDG_CURRENT_DESKTOP"
+      register: current_desktop
+
+    - include: tasks/update-{{ ansible_os_family }}.yml
+    - include: tasks/users.yml
+    - include: tasks/cron.yml
+    - include: tasks/packages.yml
+    - include: tasks/dconf-update.yml
+      when: {{ current_desktop.stdout }} == 'GNOME'
