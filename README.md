@@ -1,5 +1,7 @@
 # ansible-desktop-playbook
 
+A work in progress while I learn Ansible.
+
 ## Prerequisites
 
 - [Ansible](https://www.ansible.com/)
