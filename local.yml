@@ -1,24 +1,26 @@
---- 
-hosts: localhost
-  become: true
-    pre_tasks:
-    - name: update repositories
-      apt: update_cache=yes
-      changed_when: false
+---
+- hosts: localhost
+  connection: local
+  pre_tasks:
+  - name: update repositories
+    apt: update_cache=yes
+    changed_when: false
 
-  - include_vars: {{ item }}
+  - include_vars: "{{ item }}"
     with_first_found:
-      - vars/{{ ansible_os_family }}.yml
+      - vars/"{{ ansible_os_family }}".yml
       - vars/default.yml
+
+  # TODO on ubuntu reports 'ubuntu:GNOME'
   tasks:
     - name: Get Desktop
       shell:
         cmd: "echo $XDG_CURRENT_DESKTOP"
       register: current_desktop
 
-    - include: tasks/update-{{ ansible_os_family }}.yml
-    - include: tasks/users.yml
-    - include: tasks/cron.yml
-    - include: tasks/packages.yml
-    - include: tasks/dconf-update.yml
-      when: {{ current_desktop.stdout }} == 'GNOME'
+    - include_tasks: "tasks/update-{{ ansible_os_family }}.yml"
+    - import_tasks: tasks/users.yml
+     - import_tasks: tasks/cron.yml
+    - import_tasks: tasks/packages.yml
+    - import_tasks: tasks/dconf-update.yml
+      when: "{{ current_desktop.stdout }}=='GNOME'"
