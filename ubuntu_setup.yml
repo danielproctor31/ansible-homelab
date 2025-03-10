@@ -25,7 +25,7 @@
     - name: Setup user 'dan'
       user:
         name: dan
-        shell: /bin/zsh
+        shell: /bin/bash
         append: yes
         groups: sudo
 
