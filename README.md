@@ -17,7 +17,8 @@ echo "your_remote_user ALL=(ALL) NOPASSWD: ALL" | sudo tee /etc/sudoers.d/your_r
 your_server_ip_or_hostname
 ```
 
-- Copy public key to server (if using ssh keys)
+- Copy your public ssh key to server
+**This is important as once the playbook has been executed you will no longer have password logon available**
 
 ```bash
 ssh-copy-id your_remote_user@your_server_ip_or_hostname
