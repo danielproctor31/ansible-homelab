@@ -2,7 +2,11 @@
 
 ## Prerequisites
 
-Install [Ansible](https://www.ansible.com/) on your Control Machine (Your Local Computer)
+- Install [Ansible](https://www.ansible.com/) on your Control Machine (Your Local Computer)
+- Setup remote user with NOPASSWD
+```bash
+echo "your_remote_user ALL=(ALL) NOPASSWD: ALL" | sudo tee /etc/sudoers.d/your_remote_user_nopasswd
+```
 
 ## Usage:
 
