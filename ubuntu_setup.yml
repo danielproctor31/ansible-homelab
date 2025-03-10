@@ -19,72 +19,17 @@
           - tmux
           - ca-certificates
           - curl
+          - fail2ban
         state: present
 
-    - name: Create user 'dan' with sudo privileges and zsh shell
+    - name: Setup user 'dan'
       user:
         name: dan
         shell: /bin/zsh
         append: yes
         groups: sudo
 
-    - name: Configure unattended upgrades
-      copy:
-        content: |
-          Unattended-Upgrade::Origins-Pattern {
-              "origin=Ubuntu,codename=${distro_codename},label=Ubuntu";
-              "origin=Ubuntu,codename=${distro_codename},label=Ubuntu-Security";
-          };
-          Unattended-Upgrade::Automatic-Security-Updates "1";
-          Unattended-Upgrade::Automatic-Reboot "true";
-          Unattended-Upgrade::Automatic-Reboot-Time "04:00";
-        dest: /etc/apt/apt.conf.d/50unattended-upgrades
-
-    - name: Enable unattended upgrades
-      dpkg_selections:
-        name: unattended-upgrades
-        selection: install
-
-    - name: Configure SSHD
-      lineinfile:
-        path: /etc/ssh/sshd_config
-        regexp: "{{ item.regexp }}"
-        line: "{{ item.line }}"
-        state: present
-      loop:
-        - { regexp: "^PermitRootLogin", line: "PermitRootLogin no" }
-        - { regexp: "^PasswordAuthentication", line: "PasswordAuthentication yes" }
-        - { regexp: "^#?Port", line: "Port 22" } # Ensure standard port 22 is used
-
-    - name: Configure UFW
-      ufw:
-        state: reset
-      ignore_errors: yes # reset can fail if ufw is not enabled
-
-    - name: Set default deny incoming
-      ufw:
-        default: deny
-        direction: incoming
-
-    - name: Set default allow outgoing
-      ufw:
-        default: allow
-        direction: outgoing
-
-    - name: Allow SSH
-      ufw:
-        rule: allow
-        name: OpenSSH
-
-    - name: Enable UFW
-      ufw:
-        state: enabled
-
-    - name: Reload SSH service
-      systemd:
-        name: ssh
-        state: restarted
-
+    # Start install Docker
     - name: Remove existing Docker packages (if any)
       shell: "for pkg in docker.io docker-doc docker-compose docker-compose-v2 podman-docker containerd runc; do apt-get remove -y $pkg; done"
       ignore_errors: yes # in case the packages are not installed
@@ -136,6 +81,81 @@
       loop:
         - docker.service
         - containerd.service
+    # End install Docker
+
+    - name: Configure unattended upgrades
+      copy:
+        content: |
+          Unattended-Upgrade::Origins-Pattern {
+              "origin=Ubuntu,codename=${distro_codename},label=Ubuntu";
+              "origin=Ubuntu,codename=${distro_codename},label=Ubuntu-Security";
+          };
+          Unattended-Upgrade::Automatic-Security-Updates "1";
+          Unattended-Upgrade::Automatic-Reboot "true";
+          Unattended-Upgrade::Automatic-Reboot-Time "04:00";
+        dest: /etc/apt/apt.conf.d/50unattended-upgrades
+
+    - name: Enable unattended upgrades
+      dpkg_selections:
+        name: unattended-upgrades
+        selection: install
+
+    - name: Configure SSHD
+      lineinfile:
+        path: /etc/ssh/sshd_config
+        regexp: "{{ item.regexp }}"
+        line: "{{ item.line }}"
+        state: present
+      loop:
+        - { regexp: "^PasswordAuthentication", line: "PasswordAuthentication no" }
+        - { regexp: "^#?PubkeyAuthentication", line: "PubkeyAuthentication yes" }
+        - { regexp: "^#?Port", line: "Port 22" }
+
+    - name: Configure fail2ban jail for SSH
+      copy:
+        content: |
+          [sshd]
+          enabled = true
+          port = ssh
+          logpath = %(sshd_log)s
+          bantime = 10m
+          findtime = 10m
+          maxretry = 5
+        dest: /etc/fail2ban/jail.d/sshd.conf
+
+    - name: Restart fail2ban
+      systemd:
+        name: fail2ban
+        state: restarted
+
+    - name: Configure UFW
+      ufw:
+        state: reset
+      ignore_errors: yes # reset can fail if ufw is not enabled
+
+    - name: Set default deny incoming
+      ufw:
+        default: deny
+        direction: incoming
+
+    - name: Set default allow outgoing
+      ufw:
+        default: allow
+        direction: outgoing
+
+    - name: Allow SSH
+      ufw:
+        rule: allow
+        name: OpenSSH
+
+    - name: Enable UFW
+      ufw:
+        state: enabled
+
+    - name: Reload SSH service
+      systemd:
+        name: ssh
+        state: restarted
 
     - name: Autoremove packages
       apt:
