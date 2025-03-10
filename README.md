@@ -1,4 +1,4 @@
-# ansible-desktop-playbook
+# ansible-homelab
 
 ## Prerequisites
 
