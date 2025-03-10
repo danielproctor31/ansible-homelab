@@ -2,16 +2,27 @@
 
 ## Prerequisites
 
-- [Ansible](https://www.ansible.com/)
+Install [Ansible](https://www.ansible.com/) on your Control Machine (Your Local Computer)
 
 ## Usage:
-```
-sudo ansible-pull -U https://github.com/danielproctor31/ansible-desktop-playbook.git
+
+- Create Inventory file `inventory`:
+
+```toml
+[ubuntu_servers]
+your_server_ip_or_hostname
 ```
 
-Locally:
+- Copy public key to server (if using ssh keys)
+
+```bash
+ssh-copy-id your_remote_user@your_server_ip_or_hostname
 ```
-git clone https://github.com/danielproctor31/ansible-desktop-playbook.git
-cd ansible-desktop-playbook
-sudo ansible-playbook ubuntu_setup.yml
+
+- Save `ubuntu_setup.yml` in the same directory as the inventory file
+
+- From the same directory run:
+  
+```bash
+ansible-playbook ubuntu_setup.yml -i inventory -u your_remote_user
 ```
