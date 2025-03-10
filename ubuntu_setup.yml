@@ -80,6 +80,24 @@
       loop:
         - docker.service
         - containerd.service
+
+    - name: Create logrotate configuration for docker logs
+      copy:
+        content: |
+          /var/lib/docker/containers/*/*.log {
+              daily
+              rotate 7
+              missingok
+              notifempty
+              compress
+              delaycompress
+              sharedscripts
+              endscript
+          }
+        dest: /etc/logrotate.d/docker
+        owner: root
+        group: root
+        mode: '0644'
     # End install Docker
 
     - name: Configure unattended upgrades
@@ -126,6 +144,16 @@
       systemd:
         name: fail2ban
         state: restarted
+    
+    - name: Harden kernel parameters
+      sysctl:
+        name: "{{ item.name }}"
+        value: "{{ item.value }}"
+        state: present
+      loop:
+        - { name: net.ipv4.ip_forward, value: 0 }
+        - { name: net.ipv4.tcp_syncookies, value: 1 }
+        - { name: net.ipv4.conf.all.accept_redirects, value: 0 }
 
     - name: Configure UFW
       ufw:
