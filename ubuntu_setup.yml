@@ -1,0 +1,94 @@
+---
+- hosts: all
+  become: true
+  tasks:
+    - name: Update apt packages
+      apt:
+        update_cache: yes
+
+    - name: Install required packages
+      apt:
+        name:
+          - ufw
+          - unattended-upgrades
+          - update-notifier-common
+          - git
+          - vim
+          - zsh
+          - htop
+          - tmux
+          - ca-certificates
+          - curl
+        state: present
+
+    - name: Create user 'dan' with sudo privileges and zsh shell
+      user:
+        name: dan
+        shell: /bin/zsh
+        append: yes
+        groups: sudo
+
+    - name: Configure unattended upgrades
+      copy:
+        content: |
+          Unattended-Upgrade::Origins-Pattern {
+              "origin=Ubuntu,codename=${distro_codename},label=Ubuntu";
+              "origin=Ubuntu,codename=${distro_codename},label=Ubuntu-Security";
+          };
+          Unattended-Upgrade::Automatic-Security-Updates "1";
+          Unattended-Upgrade::Automatic-Reboot "true";
+          Unattended-Upgrade::Automatic-Reboot-Time "04:00";
+        dest: /etc/apt/apt.conf.d/50unattended-upgrades
+
+    - name: Enable unattended upgrades
+      dpkg_selections:
+        name: unattended-upgrades
+        selection: install
+
+    - name: Configure SSHD
+      lineinfile:
+        path: /etc/ssh/sshd_config
+        regexp: "{{ item.regexp }}"
+        line: "{{ item.line }}"
+        state: present
+      loop:
+        - { regexp: "^PermitRootLogin", line: "PermitRootLogin no" }
+        - { regexp: "^PasswordAuthentication", line: "PasswordAuthentication yes" }
+        - { regexp: "^#?Port", line: "Port 22" } # Ensure standard port 22 is used
+
+    - name: Configure UFW
+      ufw:
+        state: reset
+      ignore_errors: yes # reset can fail if ufw is not enabled
+
+    - name: Set default deny incoming
+      ufw:
+        default: deny
+        direction: incoming
+
+    - name: Set default allow outgoing
+      ufw:
+        default: allow
+        direction: outgoing
+
+    - name: Allow SSH
+      ufw:
+        rule: allow
+        name: OpenSSH
+
+    - name: Enable UFW
+      ufw:
+        state: enabled
+
+    - name: Reload SSH service
+      systemd:
+        name: ssh
+        state: restarted
+
+    - name: Autoremove packages
+      apt:
+        autoremove: yes
+
+    - name: Clean apt cache
+      apt:
+        autoclean: yes
