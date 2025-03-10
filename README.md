@@ -15,5 +15,5 @@ Locally:
 ```
 git clone https://github.com/danielproctor31/ansible-desktop-playbook.git
 cd ansible-desktop-playbook
-sudo ansible-playbook local.yml
+sudo ansible-playbook ubuntu_setup.yml
 ```
