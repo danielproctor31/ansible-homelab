@@ -14,7 +14,6 @@
           - update-notifier-common
           - git
           - vim
-          - zsh
           - htop
           - tmux
           - ca-certificates
