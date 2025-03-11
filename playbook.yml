@@ -90,9 +90,9 @@
             - docker-compose-plugin
           state: present
   
-      - name: Add 'dan' user to the docker group
+      - name: Add user to the docker group
         user:
-          name: dan
+          name: "{{ created_username }}"
           groups: docker
           append: yes
   
@@ -179,15 +179,6 @@
         systemd:
           name: fail2ban
           state: restarted
-      
-      - name: Harden kernel parameters
-        sysctl:
-          name: "{{ item.name }}"
-          value: "{{ item.value }}"
-          state: present
-        loop:
-          - { name: net.ipv4.tcp_syncookies, value: 1 }
-          - { name: net.ipv4.conf.all.accept_redirects, value: 0 }
   
       - name: Configure UFW
         ufw:
