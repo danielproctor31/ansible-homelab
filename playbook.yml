@@ -1,10 +1,20 @@
 ---
   - hosts: all
     become: true
+
+    vars:
+      created_username: dan
+
     tasks:
-      - name: Update apt packages
+      - name: Install aptitude
         apt:
-          update_cache: yes
+          name: aptitude
+          state: latest
+          update_cache: true
+
+      - name: Upgrade apt packages
+        apt:
+          upgrade: yes
   
       - name: Install required packages
         apt:
@@ -21,12 +31,26 @@
             - fail2ban
           state: present
   
-      - name: Setup user 'dan'
+      - name: Setup user
         user:
-          name: dan
+          name: "{{ created_username }}"
+          state: present
           shell: /bin/bash
           append: yes
           groups: sudo
+          create_home: true
+
+      - name: Setup passwordless sudo for user
+        copy:
+          content: |
+            {{ created_username }} ALL=(ALL) NOPASSWD: ALL
+          dest: "/etc/sudoers.d/{{ created_username }}_nopasswd"
+
+      - name: Set authorized key for user
+        ansible.posix.authorized_key:
+          user: "{{ created_username }}"
+          state: present
+          key: "{{ lookup('file', lookup('env','HOME') + '/.ssh/id_rsa.pub') }}"
   
       # Start install Docker
       - name: Remove existing Docker packages (if any)
@@ -125,6 +149,7 @@
           line: "{{ item.line }}"
           state: present
         loop:
+          - { regexp: "^#?PermitRootLogin", line: "PermitRootLogin no" }
           - { regexp: "^PasswordAuthentication", line: "PasswordAuthentication no" }
           - { regexp: "^#?PubkeyAuthentication", line: "PubkeyAuthentication yes" }
           - { regexp: "^#?Port", line: "Port 22" }

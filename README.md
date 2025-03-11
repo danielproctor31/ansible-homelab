@@ -3,31 +3,21 @@
 ## Prerequisites
 
 - Install [Ansible](https://www.ansible.com/) on your control machine (local computer)
-- Setup remote user with NOPASSWD on the target machine
+- Ensure you have an ssh key setup
+
 ```bash
-echo "your_remote_user ALL=(ALL) NOPASSWD: ALL" | sudo tee /etc/sudoers.d/your_remote_user_nopasswd
+ssh-keygen
 ```
+
 
 ## Usage:
 
-- Create Inventory file `inventory`:
-
-```toml
-[ubuntu_servers]
-your_server_ip_or_hostname
+First run needs to be done as root with password login
+```bash
+ansible-playbook playbook.yml -i inventory -u root -k
 ```
 
-- Copy your public ssh key to server
-**This is important as once the playbook has been executed you will no longer have password logon available**
-
+Subsequent runs should be performed as the remote user with ssh
 ```bash
-ssh-copy-id your_remote_user@your_server_ip_or_hostname
-```
-
-- Save `ubuntu_setup.yml` in the same directory as the inventory file
-
-- From the same directory run:
-  
-```bash
-ansible-playbook ubuntu_setup.yml -i inventory -u your_remote_user
+ansible-playbook playbook.yml -i inventory -u your_remote_user
 ```

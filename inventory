@@ -1,2 +1,5 @@
-[ubuntu_servers]
-odin
+[servers]
+odin ansible_host=192.168.50.19
+
+[all:vars]
+ansible_python_interpreter=/usr/bin/python3
