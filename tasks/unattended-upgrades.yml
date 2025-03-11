@@ -1,0 +1,17 @@
+- name: Configure unattended upgrades
+  copy:
+    content: |
+      Unattended-Upgrade::Origins-Pattern {
+          "origin=Ubuntu,codename=${distro_codename},label=Ubuntu";
+          "origin=Ubuntu,codename=${distro_codename},label=Ubuntu-Security";
+      };
+      Unattended-Upgrade::Remove-Unused-Dependencies "true";
+      Unattended-Upgrade::Automatic-Security-Updates "1";
+      Unattended-Upgrade::Automatic-Reboot "true";
+      Unattended-Upgrade::Automatic-Reboot-Time "04:00";
+    dest: /etc/apt/apt.conf.d/50unattended-upgrades
+
+- name: Enable unattended upgrades
+  dpkg_selections:
+    name: unattended-upgrades
+    selection: install

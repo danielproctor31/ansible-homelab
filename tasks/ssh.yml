@@ -1,0 +1,22 @@
+- name: Set authorized key for user
+  ansible.posix.authorized_key:
+    user: "{{ created_username }}"
+    state: present
+    key: "{{ lookup('file', lookup('env','HOME') + '/.ssh/id_rsa.pub') }}"
+
+- name: Configure SSHD
+  lineinfile:
+    path: /etc/ssh/sshd_config
+    regexp: "{{ item.regexp }}"
+    line: "{{ item.line }}"
+    state: present
+  loop:
+    - { regexp: "^#?PermitRootLogin", line: "PermitRootLogin no" }
+    - { regexp: "^PasswordAuthentication", line: "PasswordAuthentication no" }
+    - { regexp: "^#?PubkeyAuthentication", line: "PubkeyAuthentication yes" }
+    - { regexp: "^#?Port", line: "Port 22" }
+
+- name: Reload SSH service
+  systemd:
+    name: ssh
+    state: restarted

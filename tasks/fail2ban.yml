@@ -1,0 +1,25 @@
+- name: Configure fail2ban jail for SSH
+  copy:
+    content: |
+      # Global fail2ban settings
+      [DEFAULT]
+      bantime = 1h
+      findtime = 10m
+      maxretry = 5
+      banaction = ufw
+      banaction_allports = ufw
+
+      # SSH protection
+      [sshd]
+      enabled = true
+      port = ssh
+      logpath = %(sshd_log)s
+      bantime = 10m
+      findtime = 10m
+      maxretry = 5
+    dest: /etc/fail2ban/jail.d/sshd.conf
+
+- name: Restart fail2ban
+  systemd:
+    name: fail2ban
+    state: restarted

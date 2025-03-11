@@ -1,0 +1,69 @@
+- name: Remove existing Docker packages (if any)
+  shell: "for pkg in docker.io docker-doc docker-compose docker-compose-v2 podman-docker containerd runc; do apt-get remove -y $pkg; done"
+  ignore_errors: yes # in case the packages are not installed
+
+- name: Create Docker keyring directory
+  file:
+    path: /etc/apt/keyrings
+    state: directory
+    mode: '0755'
+
+- name: Download Docker GPG key
+  get_url:
+    url: https://download.docker.com/linux/ubuntu/gpg
+    dest: /etc/apt/keyrings/docker.asc
+    mode: '0644'
+
+- name: Add Docker repository to sources list
+  shell: |
+    echo \
+      "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu \
+      $(. /etc/os-release && echo "${UBUNTU_CODENAME:-$VERSION_CODENAME}") stable" | \
+      tee /etc/apt/sources.list.d/docker.list > /dev/null
+
+- name: Update apt packages after adding Docker repo
+  apt:
+    update_cache: yes
+
+- name: Install Docker CE
+  apt:
+    name:
+      - docker-ce
+      - docker-ce-cli
+      - containerd.io
+      - docker-buildx-plugin
+      - docker-compose-plugin
+    state: present
+
+- name: Add user to the docker group
+  user:
+    name: "{{ created_username }}"
+    groups: docker
+    append: yes
+
+- name: Enable and start Docker services
+  systemd:
+    name: "{{ item }}"
+    enabled: true
+    state: started
+  loop:
+    - docker.service
+    - containerd.service
+
+- name: Create logrotate configuration for docker logs
+  copy:
+    content: |
+      /var/lib/docker/containers/*/*.log {
+          daily
+          rotate 7
+          missingok
+          notifempty
+          compress
+          delaycompress
+          sharedscripts
+          endscript
+      }
+    dest: /etc/logrotate.d/docker
+    owner: root
+    group: root
+    mode: '0644'

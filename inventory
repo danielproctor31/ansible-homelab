@@ -1,4 +1,4 @@
-[servers]
+[ubuntu_servers]
 odin ansible_host=192.168.50.19
 
 [all:vars]

@@ -1,0 +1,23 @@
+- name: Configure UFW
+  ufw:
+    state: reset
+  ignore_errors: yes # reset can fail if ufw is not enabled
+
+- name: Set default deny incoming
+  ufw:
+    default: deny
+    direction: incoming
+
+- name: Set default allow outgoing
+  ufw:
+    default: allow
+    direction: outgoing
+
+- name: Allow SSH
+  ufw:
+    rule: allow
+    name: OpenSSH
+
+- name: Enable UFW
+  ufw:
+    state: enabled

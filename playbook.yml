@@ -1,11 +1,11 @@
 ---
-  - hosts: all
+  - hosts: ubuntu_servers
     become: true
 
-    vars:
-      created_username: dan
-
     tasks:
+      - name: Include variables
+        include_vars: variables.yml
+
       - name: Install aptitude
         apt:
           name: aptitude
@@ -30,184 +30,24 @@
             - curl
             - fail2ban
           state: present
-  
+
       - name: Setup user
-        user:
-          name: "{{ created_username }}"
-          state: present
-          shell: /bin/bash
-          append: yes
-          groups: sudo
-          create_home: true
+        include_tasks: tasks/setup-user.yml
 
-      - name: Setup passwordless sudo for user
-        copy:
-          content: |
-            {{ created_username }} ALL=(ALL) NOPASSWD: ALL
-          dest: "/etc/sudoers.d/{{ created_username }}_nopasswd"
-
-      - name: Set authorized key for user
-        ansible.posix.authorized_key:
-          user: "{{ created_username }}"
-          state: present
-          key: "{{ lookup('file', lookup('env','HOME') + '/.ssh/id_rsa.pub') }}"
-  
-      # Start install Docker
-      - name: Remove existing Docker packages (if any)
-        shell: "for pkg in docker.io docker-doc docker-compose docker-compose-v2 podman-docker containerd runc; do apt-get remove -y $pkg; done"
-        ignore_errors: yes # in case the packages are not installed
-  
-      - name: Create Docker keyring directory
-        file:
-          path: /etc/apt/keyrings
-          state: directory
-          mode: '0755'
-  
-      - name: Download Docker GPG key
-        get_url:
-          url: https://download.docker.com/linux/ubuntu/gpg
-          dest: /etc/apt/keyrings/docker.asc
-          mode: '0644'
-  
-      - name: Add Docker repository to sources list
-        shell: |
-          echo \
-            "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu \
-            $(. /etc/os-release && echo "${UBUNTU_CODENAME:-$VERSION_CODENAME}") stable" | \
-            tee /etc/apt/sources.list.d/docker.list > /dev/null
-  
-      - name: Update apt packages after adding Docker repo
-        apt:
-          update_cache: yes
-  
-      - name: Install Docker CE
-        apt:
-          name:
-            - docker-ce
-            - docker-ce-cli
-            - containerd.io
-            - docker-buildx-plugin
-            - docker-compose-plugin
-          state: present
-  
-      - name: Add user to the docker group
-        user:
-          name: "{{ created_username }}"
-          groups: docker
-          append: yes
-  
-      - name: Enable and start Docker services
-        systemd:
-          name: "{{ item }}"
-          enabled: true
-          state: started
-        loop:
-          - docker.service
-          - containerd.service
-  
-      - name: Create logrotate configuration for docker logs
-        copy:
-          content: |
-            /var/lib/docker/containers/*/*.log {
-                daily
-                rotate 7
-                missingok
-                notifempty
-                compress
-                delaycompress
-                sharedscripts
-                endscript
-            }
-          dest: /etc/logrotate.d/docker
-          owner: root
-          group: root
-          mode: '0644'
-      # End install Docker
+      - name: Install Docker
+        include_tasks: tasks/docker.yml
   
       - name: Configure unattended upgrades
-        copy:
-          content: |
-            Unattended-Upgrade::Origins-Pattern {
-                "origin=Ubuntu,codename=${distro_codename},label=Ubuntu";
-                "origin=Ubuntu,codename=${distro_codename},label=Ubuntu-Security";
-            };
-            Unattended-Upgrade::Remove-Unused-Dependencies "true";
-            Unattended-Upgrade::Automatic-Security-Updates "1";
-            Unattended-Upgrade::Automatic-Reboot "true";
-            Unattended-Upgrade::Automatic-Reboot-Time "04:00";
-          dest: /etc/apt/apt.conf.d/50unattended-upgrades
-  
-      - name: Enable unattended upgrades
-        dpkg_selections:
-          name: unattended-upgrades
-          selection: install
-  
-      - name: Configure SSHD
-        lineinfile:
-          path: /etc/ssh/sshd_config
-          regexp: "{{ item.regexp }}"
-          line: "{{ item.line }}"
-          state: present
-        loop:
-          - { regexp: "^#?PermitRootLogin", line: "PermitRootLogin no" }
-          - { regexp: "^PasswordAuthentication", line: "PasswordAuthentication no" }
-          - { regexp: "^#?PubkeyAuthentication", line: "PubkeyAuthentication yes" }
-          - { regexp: "^#?Port", line: "Port 22" }
-  
-      - name: Configure fail2ban jail for SSH
-        copy:
-          content: |
-            # Global fail2ban settings
-            [DEFAULT]
-            bantime = 1h
-            findtime = 10m
-            maxretry = 5
-            banaction = ufw
-            banaction_allports = ufw
+        include_tasks: tasks/unattended-upgrades.yml
 
-            # SSH protection
-            [sshd]
-            enabled = true
-            port = ssh
-            logpath = %(sshd_log)s
-            bantime = 10m
-            findtime = 10m
-            maxretry = 5
-          dest: /etc/fail2ban/jail.d/sshd.conf
-  
-      - name: Restart fail2ban
-        systemd:
-          name: fail2ban
-          state: restarted
-  
-      - name: Configure UFW
-        ufw:
-          state: reset
-        ignore_errors: yes # reset can fail if ufw is not enabled
-  
-      - name: Set default deny incoming
-        ufw:
-          default: deny
-          direction: incoming
-  
-      - name: Set default allow outgoing
-        ufw:
-          default: allow
-          direction: outgoing
-  
-      - name: Allow SSH
-        ufw:
-          rule: allow
-          name: OpenSSH
-  
-      - name: Enable UFW
-        ufw:
-          state: enabled
-  
-      - name: Reload SSH service
-        systemd:
-          name: ssh
-          state: restarted
+      - name: Configure ssh
+        include_tasks: tasks/ssh.yml
+
+      - name: Configure fail2ban
+        include_tasks: tasks/fail2ban.yml
+
+      - name: Configure ufw
+        include_tasks: tasks/ufw.yml
   
       - name: Autoremove packages
         apt:
