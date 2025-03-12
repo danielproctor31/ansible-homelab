@@ -12,7 +12,7 @@
     state: present
   loop:
     - { regexp: "^#?PermitRootLogin", line: "PermitRootLogin no" }
-    - { regexp: "^PasswordAuthentication", line: "PasswordAuthentication no" }
+    - { regexp: "^#?PasswordAuthentication", line: "PasswordAuthentication no" }
     - { regexp: "^#?PubkeyAuthentication", line: "PubkeyAuthentication yes" }
     - { regexp: "^#?Port", line: "Port 22" }
 
