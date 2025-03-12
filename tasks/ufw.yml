@@ -18,6 +18,18 @@
     rule: allow
     name: OpenSSH
 
+- name: Allow all access to tcp port 32400 (plex)
+  ufw:
+    rule: allow
+    port: '32400'
+    proto: tcp
+    
+- name: Allow all access to tcp port 8123 (home asisstant)
+  ufw:
+    rule: allow
+    port: '8123'
+    proto: tcp
+
 - name: Enable UFW
   ufw:
     state: enabled
