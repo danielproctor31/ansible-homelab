@@ -16,6 +16,11 @@
     - { regexp: "^#?PubkeyAuthentication", line: "PubkeyAuthentication yes" }
     - { regexp: "^#?Port", line: "Port 22" }
 
+- name: Remove /etc/ssh/sshd_config.d/50-cloud-init.conf
+  file:
+    path: /etc/ssh/sshd_config.d/50-cloud-init.conf
+    state: absent
+
 - name: Reload SSH service
   systemd:
     name: ssh
