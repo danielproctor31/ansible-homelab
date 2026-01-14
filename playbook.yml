@@ -1,20 +1,30 @@
 ---
-  - hosts: ubuntu_servers
+  - hosts: homelab_servers
     become: true
+    gather_facts: true
+
+    handlers:
+      - import_tasks: handlers/main.yml
 
     tasks:
-      - name: Include variables
-        include_vars: variables.yml
+      - name: Verify OS family is Debian-based
+        assert:
+          that:
+            - ansible_os_family == "Debian"
+          fail_msg: "This playbook only supports Debian-based distributions (Debian, Ubuntu)"
+        tags: always
 
       - name: Install aptitude
         apt:
           name: aptitude
-          state: latest
+          state: present
           update_cache: true
+        tags: ['packages', 'initial']
 
       - name: Upgrade apt packages
         apt:
           upgrade: yes
+        tags: ['packages', 'upgrade']
   
       - name: Install required packages
         apt:
@@ -29,30 +39,48 @@
             - ca-certificates
             - curl
             - fail2ban
+            - systemd-timesyncd
           state: present
+        tags: ['packages', 'initial']
 
       - name: Setup user
         include_tasks: tasks/setup-user.yml
+        tags: ['user', 'security']
+
+      - name: Configure timezone
+        include_tasks: tasks/timezone.yml
+        tags: ['system', 'timezone']
+
+      - name: Configure time synchronization
+        include_tasks: tasks/timesyncd.yml
+        tags: ['system', 'time']
 
       - name: Install Docker
         include_tasks: tasks/docker.yml
+        tags: ['docker']
   
       - name: Configure unattended upgrades
         include_tasks: tasks/unattended-upgrades.yml
+        tags: ['security', 'updates']
 
       - name: Configure ssh
         include_tasks: tasks/ssh.yml
+        tags: ['security', 'ssh']
 
       - name: Configure fail2ban
         include_tasks: tasks/fail2ban.yml
+        tags: ['security', 'fail2ban']
 
       - name: Configure ufw
         include_tasks: tasks/ufw.yml
+        tags: ['security', 'firewall']
   
       - name: Autoremove packages
         apt:
           autoremove: yes
+        tags: ['packages', 'cleanup']
   
       - name: Clean apt cache
         apt:
           autoclean: yes
+        tags: ['packages', 'cleanup']

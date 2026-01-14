@@ -1,4 +1,4 @@
-- name: Configure unattended upgrades
+- name: Configure unattended upgrades for Ubuntu
   copy:
     content: |
       Unattended-Upgrade::Origins-Pattern {
@@ -10,6 +10,21 @@
       Unattended-Upgrade::Automatic-Reboot "true";
       Unattended-Upgrade::Automatic-Reboot-Time "04:00";
     dest: /etc/apt/apt.conf.d/50unattended-upgrades
+  when: ansible_distribution == "Ubuntu"
+
+- name: Configure unattended upgrades for Debian
+  copy:
+    content: |
+      Unattended-Upgrade::Origins-Pattern {
+          "origin=Debian,codename=${distro_codename},label=Debian";
+          "origin=Debian,codename=${distro_codename},label=Debian-Security";
+      };
+      Unattended-Upgrade::Remove-Unused-Dependencies "true";
+      Unattended-Upgrade::Automatic-Security-Updates "1";
+      Unattended-Upgrade::Automatic-Reboot "true";
+      Unattended-Upgrade::Automatic-Reboot-Time "04:00";
+    dest: /etc/apt/apt.conf.d/50unattended-upgrades
+  when: ansible_distribution == "Debian"
 
 - name: Enable unattended upgrades
   dpkg_selections:

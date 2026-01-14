@@ -18,8 +18,4 @@
       findtime = 10m
       maxretry = 5
     dest: /etc/fail2ban/jail.d/sshd.conf
-
-- name: Restart fail2ban
-  systemd:
-    name: fail2ban
-    state: restarted
+  notify: restart fail2ban
