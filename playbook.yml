@@ -54,13 +54,13 @@
         include_tasks: tasks/setup-user.yml
         tags: ['user', 'security']
 
-      - name: Configure timezone
-        include_tasks: tasks/timezone.yml
-        tags: ['system', 'timezone']
-
-      - name: Configure time synchronization
-        include_tasks: tasks/timesyncd.yml
+      - name: Configure timezone and time synchronization
+        include_tasks: tasks/time.yml
         tags: ['system', 'time']
+
+      - name: Configure sysctl parameters
+        include_tasks: tasks/sysctl.yml
+        tags: ['system', 'sysctl']
 
       - name: Install Docker
         include_tasks: tasks/docker.yml

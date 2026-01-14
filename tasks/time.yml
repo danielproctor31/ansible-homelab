@@ -1,4 +1,8 @@
 ---
+- name: Set timezone
+  community.general.timezone:
+    name: "{{ timezone }}"
+
 - name: Ensure systemd-timesyncd is enabled and started
   systemd:
     name: systemd-timesyncd
