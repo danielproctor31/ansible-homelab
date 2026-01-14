@@ -10,7 +10,7 @@
 
 - name: Determine OS ID for Docker repository
   set_fact:
-    docker_os_id: "{{ 'ubuntu' if ansible_distribution == 'Ubuntu' else 'debian' }}"
+    docker_os_id: "{{ 'ubuntu' if ansible_facts["distribution"] == 'Ubuntu' else 'debian' }}"
 
 - name: Download Docker GPG key
   get_url:

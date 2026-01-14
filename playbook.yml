@@ -10,7 +10,7 @@
       - name: Verify OS family is Debian-based
         assert:
           that:
-            - ansible_os_family == "Debian"
+            - ansible_facts["os_family"] == "Debian"
           fail_msg: "This playbook only supports Debian-based distributions (Debian, Ubuntu)"
         tags: always
 
@@ -47,7 +47,7 @@
           name:
             - update-notifier-common
           state: present
-        when: ansible_distribution == "Ubuntu"
+        when: ansible_facts["distribution"] == "Ubuntu"
         tags: ['packages', 'initial']
 
       - name: Setup user

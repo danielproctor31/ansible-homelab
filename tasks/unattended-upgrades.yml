@@ -4,7 +4,7 @@
       APT::Periodic::Update-Package-Lists "1";
       APT::Periodic::Unattended-Upgrade "1";
     dest: /etc/apt/apt.conf.d/20auto-upgrades
-  when: ansible_os_family == "Debian"
+  when: ansible_facts["os_family"] == "Debian"
 
 - name: Configure unattended upgrades for Ubuntu
   copy:
@@ -18,7 +18,7 @@
       Unattended-Upgrade::Automatic-Reboot "true";
       Unattended-Upgrade::Automatic-Reboot-Time "04:00";
     dest: /etc/apt/apt.conf.d/52unattended-upgrades-local
-  when: ansible_distribution == "Ubuntu"
+  when: ansible_facts["distribution"] == "Ubuntu"
 
 - name: Configure unattended upgrades for Debian
   copy:
@@ -32,7 +32,7 @@
       Unattended-Upgrade::Automatic-Reboot "true";
       Unattended-Upgrade::Automatic-Reboot-Time "04:00";
     dest: /etc/apt/apt.conf.d/52unattended-upgrades-local
-  when: ansible_distribution == "Debian"
+  when: ansible_facts["distribution"] == "Debian"
 
 - name: Enable unattended upgrades
   dpkg_selections:
