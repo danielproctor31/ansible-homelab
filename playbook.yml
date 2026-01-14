@@ -31,7 +31,6 @@
           name:
             - ufw
             - unattended-upgrades
-            - update-notifier-common
             - git
             - vim
             - htop
@@ -41,6 +40,14 @@
             - fail2ban
             - systemd-timesyncd
           state: present
+        tags: ['packages', 'initial']
+
+      - name: Install Ubuntu-specific packages
+        apt:
+          name:
+            - update-notifier-common
+          state: present
+        when: ansible_distribution == "Ubuntu"
         tags: ['packages', 'initial']
 
       - name: Setup user

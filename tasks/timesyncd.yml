@@ -4,16 +4,7 @@
     name: systemd-timesyncd
     enabled: true
     state: started
-
-- name: Configure NTP servers (optional)
-  copy:
-    content: |
-      [Time]
-      NTP=0.pool.ntp.org 1.pool.ntp.org 2.pool.ntp.org 3.pool.ntp.org
-      FallbackNTP=time.cloudflare.com time.google.com
-    dest: /etc/systemd/timesyncd.conf
-  notify: restart timesyncd
-
+    
 - name: Check time synchronization status
   command: timedatectl status
   register: timedatectl_status

@@ -6,13 +6,3 @@
     append: yes
     groups: sudo
     create_home: true
-
-- name: Setup passwordless sudo for user
-  copy:
-    content: |
-      {{ created_username }} ALL=(ALL) NOPASSWD: ALL
-    dest: "/etc/sudoers.d/{{ created_username }}_nopasswd"
-    owner: root
-    group: root
-    mode: '0440'
-    validate: 'visudo -cf %s'

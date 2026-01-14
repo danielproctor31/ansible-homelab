@@ -28,14 +28,14 @@ Edit [group_vars/homelab_servers.yml](group_vars/homelab_servers.yml) to customi
 
 ### Running the Playbook
 
-First run needs to be done as root with password login
+First run needs to be done with password login
 ```bash
-ansible-playbook playbook.yml -i inventory -u root -k
+ansible-playbook playbook.yml -i inventory -u your_remote_user -k -K
 ```
 
-Subsequent runs should be performed as the remote user with ssh
+Subsequent runs should be performed with ssh
 ```bash
-ansible-playbook playbook.yml -i inventory -u your_remote_user
+ansible-playbook playbook.yml -i inventory -u your_remote_user -K
 ```
 
 ### Using Tags
