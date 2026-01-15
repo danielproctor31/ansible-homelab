@@ -39,6 +39,9 @@
             - curl
             - fail2ban
             - systemd-timesyncd
+            - podman
+            - podman-docker
+            - podman-compose
           state: present
         tags: ['packages', 'initial']
 
@@ -62,9 +65,13 @@
         include_tasks: tasks/sysctl.yml
         tags: ['system', 'sysctl']
 
-      - name: Install Docker
-        include_tasks: tasks/docker.yml
-        tags: ['docker']
+      # - name: Install Docker
+      #   include_tasks: tasks/docker.yml
+      #   tags: ['docker']
+
+      - name: Setup Podman Quadlets
+        include_tasks: tasks/podman-quadlets.yml
+        tags: ['podman', 'containers']
   
       - name: Configure unattended upgrades
         include_tasks: tasks/unattended-upgrades.yml

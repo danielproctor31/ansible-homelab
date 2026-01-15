@@ -6,3 +6,11 @@
     state: present
     sysctl_set: yes
     reload: yes
+
+- name: Enable IP forwarding for container networking
+  sysctl:
+    name: net.ipv4.ip_forward
+    value: '1'
+    state: present
+    sysctl_set: yes
+    reload: yes

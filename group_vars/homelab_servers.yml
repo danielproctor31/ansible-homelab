@@ -8,3 +8,4 @@ timezone: Europe/London
 # UFW allowed ports
 ufw_allowed_ports:
   - { port: '32400', proto: 'tcp', comment: 'Plex' }
+  - { port: '9000', proto: 'tcp', comment: 'portainer' }

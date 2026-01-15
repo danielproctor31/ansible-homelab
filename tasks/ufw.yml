@@ -3,6 +3,13 @@
     state: reset
   ignore_errors: yes # reset can fail if ufw is not enabled
 
+- name: Set UFW forward policy to ACCEPT for container networking
+  lineinfile:
+    path: /etc/default/ufw
+    regexp: '^DEFAULT_FORWARD_POLICY='
+    line: 'DEFAULT_FORWARD_POLICY="ACCEPT"'
+    state: present
+
 - name: Set default deny incoming
   ufw:
     default: deny
@@ -17,6 +24,11 @@
   ufw:
     rule: allow
     name: OpenSSH
+
+- name: Allow HTTPS
+  ufw:
+    rule: allow
+    name: HTTPS
 
 - name: Allow configured ports
   ufw:
