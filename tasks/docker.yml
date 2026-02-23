@@ -71,3 +71,15 @@
     owner: root
     group: root
     mode: '0644'
+
+- name: Get primary network interface name
+  shell: "ip route show default | awk '/default/ {print $5}' | head -n1"
+  register: primary_interface
+  changed_when: false
+
+- name: Inject post-up hook into existing interface config
+  ansible.builtin.replace:
+    path: /etc/network/interfaces
+    regexp: '^(iface\s+{{ primary_interface.stdout }}\s+inet\s+dhcp.*)$'
+    replace: "\\1\n    post-up systemctl restart docker || true"
+  when: ansible_facts["os_family"] == "Debian" and ansible_facts["distribution"] != "Ubuntu"
