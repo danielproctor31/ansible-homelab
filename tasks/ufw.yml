@@ -21,7 +21,8 @@
 - name: Allow HTTPS
   ufw:
     rule: allow
-    name: https
+    port: '443'
+    proto: tcp
 
 - name: Allow configured ports
   ufw:
